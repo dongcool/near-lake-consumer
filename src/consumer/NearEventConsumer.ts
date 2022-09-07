@@ -1,7 +1,6 @@
-import { ExecutionOutcomeWithReceipt, StreamerMessage } from "near-lake-framework/dist/types";
-import { ReceiptData, StreamConsumer, StreamContext } from "./StreamConsumer";
+import { ReceiptData, StreamConsumer, StreamContext } from './StreamConsumer'
 
-type EventHandler = (context: StreamContext, events: NearEvent[]) => Promise<void>;
+type EventHandler = (context: StreamContext, events: NearEvent[]) => Promise<void>
 
 // Interface to capture data about an event
 // Arguments
@@ -10,47 +9,49 @@ type EventHandler = (context: StreamContext, events: NearEvent[]) => Promise<voi
 // * `event`: type of the event, e.g. nft_mint
 // * `data`: associate event data. Strictly typed for each set {standard, version, event} inside corresponding NEP
 interface NearEvent {
-  standard: string,
-  version: string,
-  event: string,
-  data?: unknown,
+  standard: string
+  version: string
+  event: string
+  data?: unknown
 };
 
 export class NearEventConsumer extends StreamConsumer {
-  constructor(
+  constructor (
     readonly name: string,
     readonly startBlockHeight: number,
     readonly handler: EventHandler,
     readonly eventStandard: string,
     readonly eventName?: string,
-    readonly eventVersion?: string,
+    readonly eventVersion?: string
   ) {
-    super(name, startBlockHeight);
+    super(name, startBlockHeight)
   }
 
-  async processReceipt (data: ReceiptData) {
+  async processReceipt (data: ReceiptData): Promise<void> {
     const events = data.outcome.executionOutcome.outcome.logs.map(
       (log: string): NearEvent | undefined => {
-        const [_, probablyEvent] = log.match(/^EVENT_JSON:(.*)$/) ?? [];
+        const [, probablyEvent] = log.match(/^EVENT_JSON:(.*)$/) ?? []
         try {
-          return JSON.parse(probablyEvent);
+          return JSON.parse(probablyEvent)
         } catch (e) {
-          return;
+          return undefined
         }
       }
     )
-      .filter((event): event is NearEvent => !!event)
+      .filter((event): event is NearEvent => !(event == null))
       .map(event => {
-        return event;
+        return event
       })
       .filter(event =>
-        (event.standard === this.eventStandard)
-        && (!this.eventName || event.event === this.eventName)
-        && (!this.eventVersion || event.version === this.eventVersion)
-      );
+        (event.standard === this.eventStandard) &&
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+        (!this.eventName || event.event === this.eventName) &&
+        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+        (!this.eventVersion || event.version === this.eventVersion)
+      )
 
-    if (events.length === 0) return;
+    if (events.length === 0) return
 
-    await this.handler(data.context, events);
+    await this.handler(data.context, events)
   }
 }
