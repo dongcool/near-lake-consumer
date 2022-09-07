@@ -11,14 +11,21 @@ export interface StreamContext {
   receiverId: string,
 }
 
+export interface ReceiptData {
+  context: StreamContext,
+  outcome: ExecutionOutcomeWithReceipt,
+}
+
 export abstract class StreamConsumer {
   private consumedBlockHeight: number = 0;
   private lakeConfig: LakeConfig;
+  private batchBlockSize = 20;
 
   constructor (
     readonly name: string,
     readonly startBlockHeight: number,
   ) {
+    // TODO read from db
     const startBlock = this.consumedBlockHeight !== 0 ? (this.consumedBlockHeight + 1) : startBlockHeight;
     this.lakeConfig = {
       s3BucketName: "near-lake-data-mainnet",
@@ -27,13 +34,20 @@ export abstract class StreamConsumer {
     }
   }
 
-  abstract processReceipt (context: StreamContext, receipt: ExecutionOutcomeWithReceipt): Promise<void>;
+  abstract processReceipt (data: ReceiptData): Promise<void>;
 
   async start () {
+    let receiptBatch: ReceiptData[] = [];
+
+    // the processing results of blocks before this one have been saved in db
+    let lastSavedBlockHeight: number;
+
     await startStream(this.lakeConfig, async (data) => {
       const blockTimestamp = data.block.header.timestamp;
       const blockHeight = data.block.header.height;
-      const processPromises = data
+      lastSavedBlockHeight ||= blockHeight;
+
+      const receiptData: ReceiptData[] = data
         .shards
         .flatMap(shard => shard.receiptExecutionOutcomes)
         .filter(outcome => outcome.receipt && 'Action' in outcome.receipt.receipt)
@@ -46,22 +60,28 @@ export abstract class StreamConsumer {
             receiverId: outcome.receipt!.receiverId,
           }
 
-          return this.processReceipt(context, outcome);
+          return {
+            context,
+            outcome,
+          };
         });
 
-      try {
-        // TODO begin transaction
-        await Promise.all(processPromises);  
-        this.consumedBlockHeight = data.block.header.height;
-        // TODO commit transaction
+      receiptBatch = receiptBatch.concat(...receiptData);
 
-        markBlock(this.name, this.consumedBlockHeight);
-        const date = new Date(blockTimestamp / 1000000);
-        logger.debug(`${this.name} consumed block ${this.consumedBlockHeight} (${date.toISOString()})`);
-      } catch (err) {
-        logger.error(this.name, 'consumed block failed', this.consumedBlockHeight);
-        logger.error(err);
-        throw err;
+      if (blockHeight >= lastSavedBlockHeight + this.batchBlockSize) {
+        try {
+          await Promise.all(receiptBatch.map(r => this.processReceipt(r)));
+          // TODO record progress in db
+          logger.debug(`[${this.name}] Processed receipt of blocks ${lastSavedBlockHeight} - ${blockHeight}`);
+
+          markBlock(this.name, blockHeight - lastSavedBlockHeight);
+
+          lastSavedBlockHeight = blockHeight;
+          receiptBatch = [];
+        } catch (err) {
+          logger.error(`[${this.name}] Process receipts failed for blocks ${lastSavedBlockHeight} - ${blockHeight}`);
+          throw err;
+        }
       }
     });
   }

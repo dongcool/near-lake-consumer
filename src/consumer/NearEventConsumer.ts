@@ -1,5 +1,5 @@
 import { ExecutionOutcomeWithReceipt, StreamerMessage } from "near-lake-framework/dist/types";
-import { StreamConsumer, StreamContext } from "./StreamConsumer";
+import { ReceiptData, StreamConsumer, StreamContext } from "./StreamConsumer";
 
 type EventHandler = (context: StreamContext, events: NearEvent[]) => Promise<void>;
 
@@ -28,8 +28,8 @@ export class NearEventConsumer extends StreamConsumer {
     super(name, startBlockHeight);
   }
 
-  async processReceipt(context: StreamContext, receipt: ExecutionOutcomeWithReceipt): Promise<void> {
-    const events = receipt.executionOutcome.outcome.logs.map(
+  async processReceipt (data: ReceiptData) {
+    const events = data.outcome.executionOutcome.outcome.logs.map(
       (log: string): NearEvent | undefined => {
         const [_, probablyEvent] = log.match(/^EVENT_JSON:(.*)$/) ?? [];
         try {
@@ -45,12 +45,12 @@ export class NearEventConsumer extends StreamConsumer {
       })
       .filter(event =>
         (event.standard === this.eventStandard)
-          && (!this.eventName || event.event === this.eventName)
-          && (!this.eventVersion || event.version === this.eventVersion)
+        && (!this.eventName || event.event === this.eventName)
+        && (!this.eventVersion || event.version === this.eventVersion)
       );
 
     if (events.length === 0) return;
 
-    await this.handler(context, events);
+    await this.handler(data.context, events);
   }
 }
