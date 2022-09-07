@@ -1,0 +1,23 @@
+{
+  "name": "near-lake-consumer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:debug": "",
+    "start": "npx tsc && node out/main.js"
+  },
+  "author": "Daniel",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/config": "^3.3.0",
+    "@types/node": "^18.7.15",
+    "typescript": "^4.8.2"
+  },
+  "dependencies": {
+    "config": "^3.3.7",
+    "near-lake-framework": "^1.0.4",
+    "winston": "^3.8.1"
+  }
+}
