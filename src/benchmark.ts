@@ -23,10 +23,10 @@ emitter.on('mark-block', ({ name, blockCount }) => {
 })
 
 setInterval(() => {
-  logger.debug(' === Benchmark (#blocks/sec) === ')
+  logger.info(' === Benchmark (#blocks/sec) === ')
 
   const matrix = _.mapValues(blocks, count => count / (reportInterval / 1000))
 
-  logger.debug(matrix)
+  logger.info(matrix)
   blocks = {}
 }, reportInterval)

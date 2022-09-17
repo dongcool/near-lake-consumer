@@ -1,6 +1,6 @@
-import { ReceiptData, StreamConsumer, StreamContext } from './StreamConsumer'
+import { ProcessResult, ReceiptData, StreamConsumer, StreamContext } from './StreamConsumer'
 
-type EventHandler = (context: StreamContext, events: NearEvent[]) => Promise<void>
+type EventHandler = (context: StreamContext, events: NearEvent[]) => Promise<ProcessResult[]>
 
 // Interface to capture data about an event
 // Arguments
@@ -12,7 +12,7 @@ interface NearEvent {
   standard: string
   version: string
   event: string
-  data?: unknown
+  data: Array<{[key: string]: any}>
 };
 
 export class NearEventConsumer extends StreamConsumer {
@@ -27,7 +27,7 @@ export class NearEventConsumer extends StreamConsumer {
     super(name, startBlockHeight)
   }
 
-  async processReceipt (data: ReceiptData): Promise<void> {
+  async processReceipt (data: ReceiptData): Promise<ProcessResult[]> {
     const events = data.outcome.executionOutcome.outcome.logs.map(
       (log: string): NearEvent | undefined => {
         const [, probablyEvent] = log.match(/^EVENT_JSON:(.*)$/) ?? []
@@ -50,8 +50,8 @@ export class NearEventConsumer extends StreamConsumer {
         (!this.eventVersion || event.version === this.eventVersion)
       )
 
-    if (events.length === 0) return
+    if (events.length === 0) return []
 
-    await this.handler(data.context, events)
+    return await this.handler(data.context, events)
   }
 }

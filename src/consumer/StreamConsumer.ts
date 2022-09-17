@@ -1,9 +1,11 @@
 import { startStream } from 'near-lake-framework'
-import { ExecutionOutcomeWithReceipt, LakeConfig } from 'near-lake-framework/dist/types'
+import { ExecutionOutcomeWithReceipt } from 'near-lake-framework/dist/types'
 import { markBlock } from '../benchmark'
 import { Checkpoint } from '../db/Checkpoint'
 import { logger } from '../logger'
-import config from 'config';
+import config from 'config'
+import { sequelize } from '../db/sequelize'
+import { BulkCreateOptions, Model, Optional } from 'sequelize/types'
 
 export interface StreamContext {
   blockHeight: number
@@ -18,39 +20,33 @@ export interface ReceiptData {
   outcome: ExecutionOutcomeWithReceipt
 }
 
-export abstract class StreamConsumer {
-  private readonly batchBlockSize = 20
-  private lastSavedBlockHeight: number | undefined;
+export interface ProcessResult {
+  model: { new(): Model, bulkCreate: (r: Array<Optional<any, string>>, options?: BulkCreateOptions) => Promise<any> }
+  records: any[]
+}
 
+export abstract class StreamConsumer {
   constructor (
     readonly name: string,
     readonly startBlockHeight: number
   ) {
   }
 
-  abstract processReceipt (data: ReceiptData): Promise<void>
+  abstract processReceipt (data: ReceiptData): Promise<ProcessResult[]>
 
   async start (): Promise<void> {
-    let receiptBatch: ReceiptData[] = []
-
-    const consumedBlockHeight = await Checkpoint.getConsumedBlockHeight(this.name);
-    const startBlockHeight = consumedBlockHeight ? consumedBlockHeight + 1 : this.startBlockHeight
     const lakeConfig = {
       s3BucketName: config.get<string>('nearLake.s3BucketName'),
       s3RegionName: config.get<string>('nearLake.s3RegionName'),
-      startBlockHeight
+      startBlockHeight: this.startBlockHeight
     }
 
-    logger.info(`[${this.name}] started from block ${startBlockHeight}`)
-
-    // the processing results of blocks before this one have been saved in db
-    this.lastSavedBlockHeight = consumedBlockHeight
+    logger.info(`[${this.name}] started from block ${this.startBlockHeight}`)
 
     await startStream(lakeConfig, async (data) => {
-      const blockTimestamp = data.block.header.timestamp
+      const blockTimestamp = Math.round(data.block.header.timestamp / 1000000) // to ms
       const blockHeight = data.block.header.height
-      logger.debug(`===> Process block ${blockHeight}`);
-      this.lastSavedBlockHeight ||= blockHeight
+      logger.debug(`===> Process block ${blockHeight}`)
 
       const receiptData: ReceiptData[] = data
         .shards
@@ -71,24 +67,33 @@ export abstract class StreamConsumer {
           }
         })
 
-      receiptBatch = receiptBatch.concat(...receiptData)
-
-      if (blockHeight >= this.lastSavedBlockHeight + this.batchBlockSize) {
+      const processResults: ProcessResult[] = []
+      for (const receipt of receiptData) {
         try {
-          await Promise.all(receiptBatch.map(async r => await this.processReceipt(r)))
-          // await Checkpoint.updateCheckpoint(this.name, blockHeight)
-          logger.debug(`[${this.name}] Processed receipt of blocks ${this.lastSavedBlockHeight} - ${blockHeight}`)
-        } catch (err) {
-          logger.error(`[${this.name}] Process receipts failed for blocks ${this.lastSavedBlockHeight} - ${blockHeight}`)
-          throw err
+          const results = await this.processReceipt(receipt)
+          processResults.push(...results)
+        } catch (err: any) {
+          logger.error(`[${this.name}] Failed to process block ${blockHeight}`)
+          logger.error(err)
+          logger.error(err.stack)
         }
-
-        markBlock(this.name, blockHeight - this.lastSavedBlockHeight)
-
-        logger.warn(`Updating lastSaved from ${this.lastSavedBlockHeight} to ${blockHeight}`);
-        this.lastSavedBlockHeight = blockHeight
-        receiptBatch = []
       }
+
+      if (processResults.length > 0) {
+        await sequelize.transaction(async t => {
+          const cp = await Checkpoint.createCheckpoint(this.name, blockHeight, t)
+          if (cp === undefined) {
+            logger.info(`[${this.name}] block ${blockHeight} already processed, skipping...`)
+            return
+          }
+
+          for (const result of processResults) {
+            await result.model.bulkCreate(result.records, { transaction: t })
+          }
+        })
+      }
+
+      markBlock(this.name, 1)
       logger.debug(`===< End of process block ${blockHeight}`)
     })
   }

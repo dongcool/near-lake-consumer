@@ -1,4 +1,4 @@
-import { linearEventConsumer } from './consumer/LinearEventConsumer'
+import { linearEventConsumer } from './consumer/linear/LinearEventConsumer'
 import { StreamConsumer } from './consumer/StreamConsumer'
 import { connect, sequelize } from './db/sequelize'
 import { logger } from './logger'
@@ -18,26 +18,6 @@ async function run (): Promise<void> {
 
 run()
   .catch(err => {
-    console.error(err)
+    logger.error(err)
     process.exit(1)
   })
-
-// class Model {
-//   static create (r: object): Model { return new Model() }
-// }
-
-// class User extends Model {
-//   static create (r: object): User {
-//     console.log('creating new user', r)
-//     return new User()
-//   }
-// }
-
-// function foo<T extends Model> (
-//   model: { new (): T, create: (r: object) => T },
-//   record: object
-// ) {
-//   model.create(record)
-// }
-
-// foo(User, { name: 'foo' })

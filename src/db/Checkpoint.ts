@@ -1,5 +1,4 @@
-import { DataTypes, Model } from 'sequelize'
-import { logger } from '../logger'
+import { DataTypes, Model, Transaction } from 'sequelize'
 import { sequelize } from './sequelize'
 
 export class Checkpoint extends Model {
@@ -7,21 +6,28 @@ export class Checkpoint extends Model {
   declare consumer_name: string
   declare consumed_block_height: number
 
-  static async getConsumedBlockHeight (consumerName: string): Promise<number | undefined> {
+  /**
+   *
+   * @param consumerName
+   * @param blockHeight
+   * @param txn
+   * @returns returns undefined if this checkpoint has already been processed
+   */
+  static async createCheckpoint (consumerName: string, blockHeight: number, txn: Transaction): Promise<Checkpoint | undefined> {
     const record = await Checkpoint.findOne({
       where: {
-        consumer_name: consumerName
-      }
+        consumer_name: consumerName,
+        consumed_block_height: blockHeight
+      },
+      transaction: txn
     })
+    if (record != null) return
 
-    return record?.consumed_block_height
-  }
-
-  static async updateCheckpoint (consumerName: string, blockHeight: number): Promise<void> {
-    logger.debug(`updating checkpoint ${consumerName} to ${blockHeight}`);
-    await Checkpoint.upsert({
+    return await Checkpoint.create({
       consumer_name: consumerName,
       consumed_block_height: blockHeight
+    }, {
+      transaction: txn
     })
   }
 }
@@ -34,7 +40,6 @@ Checkpoint.init({
   },
   consumer_name: {
     type: DataTypes.STRING,
-    unique: true,
     allowNull: false
   },
   consumed_block_height: {
@@ -46,7 +51,7 @@ Checkpoint.init({
   indexes: [
     {
       unique: true,
-      fields: ['consumer_name']
+      fields: ['consumer_name', 'consumed_block_height']
     }
   ],
   timestamps: true,

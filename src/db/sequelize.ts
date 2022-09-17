@@ -1,7 +1,12 @@
 import { Sequelize } from 'sequelize'
 import { logger } from '../logger'
+import config from 'config'
 
-export const sequelize = new Sequelize('postgres://daniel:@localhost:5432/near_lake_consumer')
+const pgConfig: {[key: string]: string} = config.get('postgres')
+
+export const sequelize = new Sequelize(`postgres://${pgConfig.username}:${pgConfig.password}@${pgConfig.hostname}:5432/${pgConfig.database}`, {
+  logging: false
+})
 
 export async function connect (): Promise<Sequelize> {
   await sequelize.authenticate()
