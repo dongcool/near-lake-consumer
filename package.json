@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npx eslint --fix src",
     "start:debug": "",
     "start": "npx tsc && node out/main.js"
   },
@@ -20,12 +21,16 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.2.5",
     "eslint-plugin-promise": "^6.0.1",
+    "sqlite3": "^5.0.11",
     "typescript": "^4.8.2"
   },
   "dependencies": {
     "config": "^3.3.7",
     "lodash": "^4.17.21",
     "near-lake-framework": "^1.0.4",
+    "pg": "^8.8.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.21.4",
     "winston": "^3.8.1"
   }
 }
