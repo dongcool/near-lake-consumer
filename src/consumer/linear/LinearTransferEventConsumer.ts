@@ -17,7 +17,7 @@ export const linearTransferEventConsumer = new NearEventConsumer(
         return event.data.map(data => {
           const record = {
             block_height: ctx.blockHeight,
-            block_timestamp: ctx.blockTimestamp,
+            block_timestamp: new Date(ctx.blockTimestamp),
             token_address: ctx.receiverId,
             sender: null,
             receiver: null,

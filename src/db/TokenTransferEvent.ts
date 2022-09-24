@@ -10,7 +10,7 @@ TokenTransferEvent.init({
     allowNull: false
   },
   block_timestamp: {
-    type: DataTypes.BIGINT,
+    type: DataTypes.DATE,
     allowNull: false
   },
   token_address: {
@@ -26,7 +26,7 @@ TokenTransferEvent.init({
     allowNull: true
   },
   amount: {
-    type: DataTypes.STRING,
+    type: DataTypes.DECIMAL,
     allowNull: false
   },
   memo: {

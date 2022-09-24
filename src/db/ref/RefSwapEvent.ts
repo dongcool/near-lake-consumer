@@ -10,7 +10,7 @@ RefSwapEvent.init({
     allowNull: false
   },
   block_timestamp: {
-    type: DataTypes.BIGINT,
+    type: DataTypes.DATE,
     allowNull: false
   },
   token_in: {
@@ -22,11 +22,11 @@ RefSwapEvent.init({
     allowNull: false
   },
   amount_in: {
-    type: DataTypes.STRING,
+    type: DataTypes.DECIMAL,
     allowNull: false
   },
   amount_out: {
-    type: DataTypes.STRING,
+    type: DataTypes.DECIMAL,
     allowNull: false
   }
 }, {

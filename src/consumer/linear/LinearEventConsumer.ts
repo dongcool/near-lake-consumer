@@ -15,7 +15,7 @@ export const linearEventConsumer = new NearEventConsumer(
       .flatMap(event => event.data.map(data => {
         return {
           block_height: ctx.blockHeight,
-          block_timestamp: ctx.blockTimestamp,
+          block_timestamp: new Date(ctx.blockTimestamp),
           standard: event.standard,
           version: event.version,
           event: event.event,

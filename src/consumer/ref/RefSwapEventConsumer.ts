@@ -3,7 +3,7 @@ import { ProcessResult, ReceiptData, StreamConsumer } from '../StreamConsumer'
 
 interface SwapEvent {
   block_height: number
-  block_timestamp: number
+  block_timestamp: Date,
   token_in: string
   token_out: string
   amount_in: string
@@ -33,7 +33,7 @@ class RefSwapEventConsumer extends StreamConsumer {
 
         return {
           block_height: data.context.blockHeight,
-          block_timestamp: data.context.blockTimestamp,
+          block_timestamp: new Date(data.context.blockTimestamp),
           token_in: groups[2],
           token_out: groups[4],
           amount_in: groups[1],

@@ -10,7 +10,7 @@ LinearEpochUpdateRewardsEvent.init({
     allowNull: false
   },
   block_timestamp: {
-    type: DataTypes.BIGINT,
+    type: DataTypes.DATE,
     allowNull: false
   },
   // NEAR event fields
@@ -32,15 +32,15 @@ LinearEpochUpdateRewardsEvent.init({
     allowNull: false
   },
   old_balance: {
-    type: DataTypes.STRING,
+    type: DataTypes.DECIMAL,
     allowNull: false
   },
   new_balance: {
-    type: DataTypes.STRING,
+    type: DataTypes.DECIMAL,
     allowNull: false
   },
   rewards: {
-    type: DataTypes.STRING,
+    type: DataTypes.DECIMAL,
     allowNull: false
   }
 }, {

@@ -9,7 +9,7 @@ import { BulkCreateOptions, Model, Optional } from 'sequelize/types'
 
 export interface StreamContext {
   blockHeight: number
-  blockTimestamp: number
+  blockTimestamp: number // timestamp in ms
   signerId: string
   predecessorId: string
   receiverId: string
