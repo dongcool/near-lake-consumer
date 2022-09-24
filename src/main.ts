@@ -1,4 +1,5 @@
 import { linearEventConsumer } from './consumer/linear/LinearEventConsumer'
+import { linearTransferEventConsumer } from './consumer/linear/LinearTransferEventConsumer'
 import { StreamConsumer } from './consumer/StreamConsumer'
 import { connect, sequelize } from './db/sequelize'
 import { logger } from './logger'
@@ -8,11 +9,12 @@ async function run (): Promise<void> {
   await sequelize.sync({ alter: true })
 
   const consumers: StreamConsumer[] = [
-    linearEventConsumer
+    linearEventConsumer,
+    linearTransferEventConsumer
   ]
 
   for (const consumer of consumers) {
-    await consumer.start()
+    void consumer.start()
   }
 }
 

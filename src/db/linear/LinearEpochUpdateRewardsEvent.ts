@@ -45,6 +45,7 @@ LinearEpochUpdateRewardsEvent.init({
   }
 }, {
   sequelize,
+  tableName: 'linear_epoch_update_rewards_events',
   indexes: [
     {
       fields: ['block_height']

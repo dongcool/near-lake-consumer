@@ -54,6 +54,7 @@ Checkpoint.init({
       fields: ['consumer_name', 'consumed_block_height']
     }
   ],
+  tableName: 'checkpoints',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'

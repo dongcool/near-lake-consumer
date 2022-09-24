@@ -15,6 +15,9 @@ module.exports = {
   consumer: {
     linear: {
       startBlock: 73629844
+    },
+    linearTransfer: {
+      startBlock: 74575910
     }
   }
 }
