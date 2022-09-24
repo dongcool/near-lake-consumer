@@ -10,7 +10,8 @@ module.exports = {
     username: 'postgres',
     password: '',
     hostname: 'localhost',
-    database: 'near_lake_consumer'
+    database: 'near_lake_consumer',
+    logging: false,
   },
   consumer: {
     linear: {
