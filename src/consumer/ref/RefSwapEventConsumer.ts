@@ -55,4 +55,4 @@ class RefSwapEventConsumer extends StreamConsumer {
   }
 }
 
-export const refStnearSwapConsumer = new RefSwapEventConsumer('ref stnear consumer', 74775776, 'meta-pool.near')
+export const refWNEARSwapConsumer = new RefSwapEventConsumer('ref wnear consumer', 74775776, 'wrap.near')
