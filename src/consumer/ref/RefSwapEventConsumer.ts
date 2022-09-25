@@ -3,7 +3,7 @@ import { ProcessResult, ReceiptData, StreamConsumer } from '../StreamConsumer'
 
 interface SwapEvent {
   block_height: number
-  block_timestamp: Date,
+  block_timestamp: Date
   token_in: string
   token_out: string
   amount_in: string

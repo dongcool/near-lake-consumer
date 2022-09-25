@@ -30,6 +30,17 @@ export class Checkpoint extends Model {
       transaction: txn
     })
   }
+
+  static async latestCheckpoint (consumerName: string): Promise<Checkpoint | null> {
+    return await Checkpoint.findOne({
+      where: {
+        consumer_name: consumerName
+      },
+      order: [
+        ['consumed_block_height', 'DESC']
+      ]
+    })
+  }
 }
 
 Checkpoint.init({

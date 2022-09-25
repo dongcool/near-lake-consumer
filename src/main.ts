@@ -12,7 +12,7 @@ async function run (): Promise<void> {
   const consumers: StreamConsumer[] = [
     linearEventConsumer,
     linearTransferEventConsumer,
-    refWNEARSwapConsumer,
+    refWNEARSwapConsumer
   ]
 
   for (const consumer of consumers) {
@@ -22,6 +22,7 @@ async function run (): Promise<void> {
 
 run()
   .catch(err => {
+    logger.error('unhandled error in main')
     logger.error(err)
-    process.exit(1)
+    process.exit(22)
   })
