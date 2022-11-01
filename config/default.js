@@ -19,6 +19,11 @@ module.exports = {
     },
     linearTransfer: {
       startBlock: 74575910
+    },
+    refSwapWNEAR: {
+      startBlock: 74775776,
+      name: 'ref wnear consumer',
+      tokenAddress: 'wrap.near',
     }
   }
 }

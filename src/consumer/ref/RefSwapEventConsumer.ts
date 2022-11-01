@@ -10,7 +10,7 @@ interface SwapEvent {
   amount_out: string
 }
 
-class RefSwapEventConsumer extends StreamConsumer {
+export class RefSwapEventConsumer extends StreamConsumer {
   constructor (
     readonly name: string,
     readonly startBlockHeight: number,
@@ -54,5 +54,3 @@ class RefSwapEventConsumer extends StreamConsumer {
     ]
   }
 }
-
-export const refWNEARSwapConsumer = new RefSwapEventConsumer('ref wnear consumer', 74775776, 'wrap.near')

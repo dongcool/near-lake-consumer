@@ -1,6 +1,5 @@
-import { linearEventConsumer } from './consumer/linear/LinearEventConsumer'
-import { linearTransferEventConsumer } from './consumer/linear/LinearTransferEventConsumer'
-import { refWNEARSwapConsumer } from './consumer/ref/RefSwapEventConsumer'
+import config from 'config';
+import { RefSwapEventConsumer } from './consumer/ref/RefSwapEventConsumer'
 import { StreamConsumer } from './consumer/StreamConsumer'
 import { connect, sequelize } from './db/sequelize'
 import { logger } from './logger'
@@ -10,9 +9,11 @@ async function run (): Promise<void> {
   await sequelize.sync({ alter: true })
 
   const consumers: StreamConsumer[] = [
-    linearEventConsumer,
-    linearTransferEventConsumer,
-    refWNEARSwapConsumer
+    new RefSwapEventConsumer(
+      config.get('consumer.refSwapWNEAR.name'),
+      config.get('consumer.refSwapWNEAR.startBlock'),
+      config.get('consumer.refSwapWNEAR.tokenAddress'),
+    ),
   ]
 
   for (const consumer of consumers) {
