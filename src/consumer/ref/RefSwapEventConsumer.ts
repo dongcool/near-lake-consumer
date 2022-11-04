@@ -21,6 +21,7 @@ export class RefSwapEventConsumer extends StreamConsumer {
 
   async processReceipt (data: ReceiptData): Promise<ProcessResult[]> {
     if (data.context.receiverId !== 'v2.ref-finance.near') return []
+    if ('Failure' in data.outcome.executionOutcome.outcome.status) return []
 
     // Ref swap logs are lke:
     // Swapped 2221875867401720921993136 meta-pool.near for 2487451465096245291810387 wrap.near
